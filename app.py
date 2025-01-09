@@ -1,38 +1,57 @@
 # app.py
-from flask import Flask, render_template, request, send_file, jsonify, after_this_request
+from flask import Flask, render_template, request, send_file, jsonify, after_this_request, make_response
 import os
 import zipfile
 from werkzeug.utils import secure_filename
-import shutil
 from datetime import datetime
+from PIL import Image
+import io
+import mimetypes
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['COMPRESSED_FOLDER'] = 'compressed'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'pdf', 'doc', 'docx', 'txt'}
 
 # Ensure required folders exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['COMPRESSED_FOLDER'], exist_ok=True)
 
-def get_file_size(filepath):
-    """Get file size in bytes"""
-    return os.path.getsize(filepath)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-def compress_file(input_filepath, output_filepath):
-    """
-    Compress the input file using ZIP compression with maximum compression
-    Returns: tuple of (original_size, compressed_size)
-    """
-    original_size = get_file_size(input_filepath)
+def compress_image(input_path, output_path, quality=60):
+    """Compress image using PIL"""
+    try:
+        img = Image.open(input_path)
+        # Convert RGBA to RGB if needed
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        # Save with reduced quality
+        img.save(output_path, 'JPEG', quality=quality, optimize=True)
+        return True
+    except Exception as e:
+        print(f"Image compression error: {e}")
+        return False
+
+def handle_file_compression(input_path, output_path, file_type):
+    """Handle compression based on file type"""
+    original_size = os.path.getsize(input_path)
     
-    # Create a ZIP file with maximum compression
-    with zipfile.ZipFile(output_filepath, 'w', compression=zipfile.ZIP_DEFLATED, 
-                        compresslevel=9) as zipf:
-        # Add the file to the ZIP archive with its original filename
-        zipf.write(input_filepath, os.path.basename(input_filepath))
+    if file_type in ['jpg', 'jpeg', 'png', 'gif', 'bmp']:
+        # For images, use PIL compression
+        success = compress_image(input_path, output_path)
+        if not success:
+            # Fallback to ZIP if image compression fails
+            with zipfile.ZipFile(output_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
+                zipf.write(input_path, os.path.basename(input_path))
+    else:
+        # For other files, use ZIP compression
+        with zipfile.ZipFile(output_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
+            zipf.write(input_path, os.path.basename(input_path))
     
-    compressed_size = get_file_size(output_filepath)
+    compressed_size = os.path.getsize(output_path)
     return original_size, compressed_size
 
 @app.route('/')
@@ -48,80 +67,92 @@ def compress():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
 
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'File type not allowed'}), 400
+
     try:
-        # Generate a unique filename using timestamp
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # Create unique filename
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         original_filename = secure_filename(file.filename)
-        base_filename = os.path.splitext(original_filename)[0]
+        file_type = original_filename.rsplit('.', 1)[1].lower()
+        base_filename = original_filename.rsplit('.', 1)[0]
         
-        # Create unique filenames for both original and compressed files
-        unique_filename = f"{base_filename}_{timestamp}"
-        input_filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        # Setup paths
+        input_filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{base_filename}_{timestamp}.{file_type}")
         output_filepath = os.path.join(app.config['COMPRESSED_FOLDER'], 
-                                     f"{unique_filename}.zip")
+                                     f"{base_filename}_{timestamp}_compressed.{file_type}")
         
-        # Save the uploaded file
+        # Save uploaded file
         file.save(input_filepath)
         
-        # Compress the file and get size information
-        original_size, compressed_size = compress_file(input_filepath, output_filepath)
+        # Compress based on file type
+        original_size, compressed_size = handle_file_compression(input_filepath, output_filepath, file_type)
         
-        # Calculate compression ratio and percentage saved
-        compression_ratio = (original_size - compressed_size) / original_size * 100
+        # Calculate compression ratio
+        compression_ratio = ((original_size - compressed_size) / original_size) * 100
         
         # Format sizes for display
         original_size_mb = original_size / (1024 * 1024)
         compressed_size_mb = compressed_size / (1024 * 1024)
         
-        # Clean up the original file
+        # Clean up original file
         os.remove(input_filepath)
-        
-        # Generate download URL with original filename
-        download_filename = f"{base_filename}.zip"
         
         return jsonify({
             'success': True,
             'original_size': f"{original_size_mb:.2f} MB",
             'compressed_size': f"{compressed_size_mb:.2f} MB",
             'compression_ratio': f"{compression_ratio:.1f}%",
-            'download_url': f"/download/{unique_filename}.zip",
-            'download_filename': download_filename
+            'download_url': f"/download/{os.path.basename(output_filepath)}",
+            'filename': original_filename
         })
 
     except Exception as e:
         # Clean up files in case of error
-        if 'input_filepath' in locals() and os.path.exists(input_filepath):
-            os.remove(input_filepath)
-        if 'output_filepath' in locals() and os.path.exists(output_filepath):
-            os.remove(output_filepath)
+        for filepath in [input_filepath, output_filepath]:
+            if 'filepath' in locals() and os.path.exists(filepath):
+                os.remove(filepath)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/download/<filename>')
 def download(filename):
-    """Handle the download of the compressed file"""
+    """Handle file download with proper headers"""
     try:
         filepath = os.path.join(app.config['COMPRESSED_FOLDER'], filename)
         
         if not os.path.exists(filepath):
             return jsonify({'error': 'File not found'}), 404
 
-        # Get original filename without timestamp
-        original_filename = filename.split('_')[0] + '.zip'
-        
+        # Get the original filename without timestamp
+        original_filename = filename.split('_')[0] + '.' + filename.rsplit('.', 1)[1]
+
+        # Get proper MIME type
+        mime_type, _ = mimetypes.guess_type(filepath)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'
+
+        # Send file with proper headers
+        response = make_response(send_file(
+            filepath,
+            mimetype=mime_type,
+            as_attachment=True,
+            download_name=original_filename
+        ))
+
+        # Add headers to help with download
+        response.headers['Content-Disposition'] = f'attachment; filename="{original_filename}"'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Cache-Control'] = 'no-cache'
+
         @after_this_request
         def cleanup(response):
             try:
-                # Remove the file after it has been downloaded
                 os.remove(filepath)
             except Exception as e:
                 print(f"Error cleaning up file: {e}")
             return response
 
-        return send_file(
-            filepath,
-            as_attachment=True,
-            download_name=original_filename  # This ensures the user gets a clean filename
-        )
+        return response
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
