@@ -1,112 +1,59 @@
 <!-- templates/index.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Compression Tool</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .upload-form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .file-input-container {
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .file-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px dashed #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .submit-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .submit-button:hover {
-            background-color: #45a049;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .instructions {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>File Compression Tool</h1>
+<!-- Previous CSS styles remain the same -->
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        <form class="upload-form" action="/compress" method="post" enctype="multipart/form-data">
-            <div class="file-input-container">
-                <input type="file" name="file" class="file-input" required>
-            </div>
-            <button type="submit" class="submit-button">Compress File</button>
-        </form>
-
-        <div class="loading" id="loadingIndicator">
-            Compressing your file, please wait...
-        </div>
-
-        <div class="instructions">
-            <h3>Instructions:</h3>
-            <ol>
-                <li>Click "Choose File" to select the file you want to compress</li>
-                <li>Click "Compress File" to start the compression process</li>
-                <li>Wait for the compression to complete</li>
-                <li>The compressed file will automatically download when ready</li>
-            </ol>
-            <p><strong>Note:</strong> Maximum file size is 16MB</p>
-        </div>
-    </div>
-
-    <script>
-        document.querySelector('form').addEventListener('submit', function() {
-            document.getElementById('loadingIndicator').style.display = 'block';
-        });
-    </script>
-</body>
-</html>
+        const form = e.target;
+        const submitButton = form.querySelector('button');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultsDiv = document.getElementById('compressionResults');
+        const errorDiv = document.getElementById('errorMessage');
+        const downloadButton = document.getElementById('downloadButton');
+        
+        // Reset UI
+        submitButton.disabled = true;
+        loadingIndicator.style.display = 'block';
+        resultsDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch('/compress', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Update results
+            document.getElementById('originalSize').textContent = data.original_size;
+            document.getElementById('compressedSize').textContent = data.compressed_size;
+            document.getElementById('compressionRatio').textContent = data.compression_ratio;
+            
+            // Set up download button
+            downloadButton.href = data.download_url;
+            downloadButton.addEventListener('click', function(e) {
+                // Remove the button after download starts
+                setTimeout(() => {
+                    resultsDiv.innerHTML += '<p>Download started! You can compress another file.</p>';
+                    downloadButton.style.display = 'none';
+                }, 1000);
+            });
+            
+            // Show results
+            resultsDiv.style.display = 'block';
+            
+        } catch (error) {
+            errorDiv.textContent = error.message || 'An error occurred during compression';
+            errorDiv.style.display = 'block';
+        } finally {
+            submitButton.disabled = false;
+            loadingIndicator.style.display = 'none';
+        }
+    });
+</script>
