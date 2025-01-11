@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Compression Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .upload-form {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .file-input {
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #loadingIndicator {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+            color: #666;
+        }
+
+        .results {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .stats {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .download-button {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .download-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .download-instructions {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Progress bar styles */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Compression Tool</h1>
+        
+        <form id="uploadForm" class="upload-form">
+            <input type="file" class="file-input" name="file" accept=".jpg,.jpeg,.png,.gif" required>
+            <button type="submit">Compress File</button>
+        </form>
+
+        <div id="loadingIndicator">
+            <div>Compressing your file...</div>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div id="results" class="results">
+            <h3>Compression Complete! 🎉</h3>
+            
+            <div class="stats">
+                <p>Original Size: <strong><span id="originalSize">-</span></strong></p>
+                <p>Compressed Size: <strong><span id="compressedSize">-</span></strong></p>
+                <p>Space Saved: <strong><span id="compressionRatio">-</span></strong></p>
+            </div>
+
+            <div class="download-section">
+                <a href="#" id="downloadButton" class="download-button" download>
+                    📥 Download Compressed File
+                </a>
+                <div class="download-instructions">
+                    Click the button above to download your compressed file
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = progressBar.querySelector('.progress-fill');
+            const errorMessage = document.getElementById('errorMessage');
+            const results = document.getElementById('results');
+            
+            // Reset UI
+            loadingIndicator.style.display = 'block';
+            progressBar.style.display = 'block';
+            errorMessage.style.display = 'none';
+            results.style.display = 'none';
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += 10;
+                    progressFill.style.width = progress + '%';
+                }
+            }, 500);
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/compress', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Complete progress bar
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                
+                // Update results
+                document.getElementById('originalSize').textContent = data.original_size;
+                document.getElementById('compressedSize').textContent = data.compressed_size;
+                document.getElementById('compressionRatio').textContent = data.compression_ratio;
+                
+                // Setup download button
+                const downloadButton = document.getElementById('downloadButton');
+                downloadButton.href = data.download_url;
+                downloadButton.setAttribute('download', data.filename);
+                
+                // Show results
+                results.style.display = 'block';
+                
+                // Auto-trigger download for mobile
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    window.location.href = data.download_url;
+                }
+                
+            } catch (error) {
+                clearInterval(progressInterval);
+                errorMessage.textContent = error.message || 'An error occurred during compression';
+                errorMessage.style.display = 'block';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                progressBar.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
