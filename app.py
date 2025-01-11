@@ -1,5 +1,4 @@
-# app.py
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import os
 import gzip
 from werkzeug.utils import secure_filename
@@ -26,11 +25,11 @@ def index():
 @app.route('/compress', methods=['POST'])
 def compress():
     if 'file' not in request.files:
-        return 'No file uploaded', 400
+        return jsonify({'error': 'No file uploaded'}), 400
     
     file = request.files['file']
     if file.filename == '':
-        return 'No file selected', 400
+        return jsonify({'error': 'No file selected'}), 400
 
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -38,16 +37,21 @@ def compress():
     # Save the uploaded file
     file.save(filepath)
     
-    # Compress the file
-    compressed_filepath = compress_file(filepath)
+    try:
+        # Compress the file
+        compressed_filepath = compress_file(filepath)
+        
+        # Clean up the original file
+        os.remove(filepath)
+        
+        # Send the compressed file
+        return send_file(compressed_filepath, 
+                         as_attachment=True,
+                         download_name=os.path.basename(compressed_filepath))
     
-    # Clean up the original file
-    os.remove(filepath)
-    
-    # Send the compressed file
-    return send_file(compressed_filepath, 
-                    as_attachment=True,
-                    download_name=os.path.basename(compressed_filepath))
+    except Exception as e:
+        # In case of an error, return a JSON error response
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
