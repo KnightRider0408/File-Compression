@@ -5,7 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Compression Tool</title>
     <style>
-        /* Your existing CSS styles here */
+        /* Reset some default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body and general styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Main container */
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Form styling */
+        .upload-form {
+            margin-bottom: 30px;
+        }
+
+        .file-input {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            font-size: 1em;
+            background-color: #f9f9f9;
+        }
+
+        .upload-form button {
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-form button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Progress bar */
+        #loadingIndicator {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            height: 10px;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #28a745;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+
+        /* Error message */
+        .error-message {
+            color: red;
+            margin-top: 20px;
+            display: none;
+        }
+
+        /* Results Section */
+        #results {
+            display: none;
+        }
+
+        .stats p {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .download-section {
+            margin-top: 30px;
+        }
+
+        .download-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            transition: background-color 0.3s;
+        }
+
+        .download-button:hover {
+            background-color: #218838;
+        }
+
+        .download-instructions {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                width: 90%;
+            }
+
+            .file-input, .upload-form button {
+                font-size: 1em;
+            }
+
+            .download-button {
+                font-size: 1em;
+                padding: 10px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -46,7 +192,6 @@
         </div>
     </div>
 
-    <!-- Add your script just before the closing </body> tag -->
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
