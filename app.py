@@ -41,13 +41,22 @@ def compress():
         # Compress the file
         compressed_filepath = compress_file(filepath)
         
+        # Calculate sizes
+        original_size = os.path.getsize(filepath)
+        compressed_size = os.path.getsize(compressed_filepath)
+        compression_ratio = round((1 - compressed_size / original_size) * 100, 2)
+        
         # Clean up the original file
         os.remove(filepath)
         
         # Send the compressed file
-        return send_file(compressed_filepath, 
-                         as_attachment=True,
-                         download_name=os.path.basename(compressed_filepath))
+        return jsonify({
+            'original_size': original_size,
+            'compressed_size': compressed_size,
+            'compression_ratio': compression_ratio,
+            'download_url': f'/{compressed_filepath}',
+            'filename': os.path.basename(compressed_filepath)
+        })
     
     except Exception as e:
         # In case of an error, return a JSON error response
