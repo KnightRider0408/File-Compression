@@ -8,11 +8,11 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Ensure the 'uploads' folder exists
+
 # Enable CORS for all routes (allow cross-origin requests from any domain)
 CORS(app)
-
-# Ensure upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def compress_file(input_file):
     """Compress the input file using gzip compression"""
