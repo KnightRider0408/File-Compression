@@ -2,10 +2,14 @@ from flask import Flask, render_template, request, send_file, jsonify
 import os
 import gzip
 from werkzeug.utils import secure_filename
+from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Enable CORS for all routes (allow cross-origin requests from any domain)
+CORS(app)
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -49,12 +53,12 @@ def compress():
         # Clean up the original file
         os.remove(filepath)
         
-        # Send the compressed file
+        # Send the compressed file as JSON response with download link
         return jsonify({
             'original_size': original_size,
             'compressed_size': compressed_size,
             'compression_ratio': compression_ratio,
-            'download_url': f'/{compressed_filepath}',
+            'download_url': f'/{compressed_filepath}',  # Make sure this matches the URL to your compressed file
             'filename': os.path.basename(compressed_filepath)
         })
     
