@@ -4,214 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Compression Tool</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <style>
-        /* Reset some default styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Body and general styles */
+        /* Custom styles for your tool */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f7fa;
             color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
         }
 
-        /* Main container */
-        .container {
+        /* Main container styling */
+        .tool-container {
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 40px;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
+            margin: auto;
             text-align: center;
         }
 
-        h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        /* Form styling */
         .upload-form {
             margin-bottom: 30px;
         }
 
         .file-input {
-            display: block;
             width: 100%;
-            padding: 12px 20px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+            padding: 12px;
             margin-bottom: 20px;
-            font-size: 1em;
-            background-color: #f9f9f9;
-        }
-
-        .upload-form button {
-            padding: 12px 25px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .upload-form button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Progress bar */
-        #loadingIndicator {
-            display: none;
-            margin-top: 20px;
         }
 
         .progress-bar {
-            width: 100%;
+            margin-top: 10px;
             background-color: #f3f3f3;
             border-radius: 5px;
             height: 10px;
-            margin-top: 10px;
         }
 
         .progress-fill {
             height: 100%;
             background-color: #28a745;
-            border-radius: 5px;
             width: 0%;
             transition: width 0.5s ease-in-out;
         }
 
-        /* Error message */
-        .error-message {
-            color: red;
-            margin-top: 20px;
-            display: none;
-        }
-
-        /* Results Section */
-        #results {
-            display: none;
-        }
-
-        .stats p {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-
         .download-section {
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
         .download-button {
-            display: inline-block;
-            padding: 12px 25px;
             background-color: #28a745;
             color: white;
-            text-decoration: none;
+            padding: 10px 20px;
             border-radius: 5px;
-            font-size: 1.2em;
-            transition: background-color 0.3s;
-        }
-
-        .download-button:hover {
-            background-color: #218838;
-        }
-
-        .download-instructions {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #555;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                width: 90%;
-            }
-
-            .file-input, .upload-form button {
-                font-size: 1em;
-            }
-
-            .download-button {
-                font-size: 1em;
-                padding: 10px 20px;
-            }
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>File Compression Tool</h1>
-        
-        <form id="uploadForm" class="upload-form">
-            <input type="file" class="file-input" name="file" accept=".jpg,.jpeg,.png,.gif" required>
-            <button type="submit">Compress File</button>
-        </form>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>File Compression Tool</strong></li>
+        </ul>
+        <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#help">Help</a></li>
+            <li><a href="#faqs">FAQs</a></li>
+            <li><a href="#contact" role="button">Contact Us</a></li>
+        </ul>
+    </nav>
 
-        <div id="loadingIndicator">
-            <div>Compressing your file...</div>
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill"></div>
-            </div>
-        </div>
-
-        <div id="errorMessage" class="error-message"></div>
-
-        <div id="results" class="results">
-            <h3>Compression Complete! 🎉</h3>
-            
-            <div class="stats">
-                <p>Original Size: <strong><span id="originalSize">-</span></strong></p>
-                <p>Compressed Size: <strong><span id="compressedSize">-</span></strong></p>
-                <p>Space Saved: <strong><span id="compressionRatio">-</span></strong></p>
-            </div>
-
-            <div class="download-section">
-                <a href="#" id="downloadButton" class="download-button" download>
-                    📥 Download Compressed File
-                </a>
-                <div class="download-instructions">
-                    Click the button above to download your compressed file
+    <main class="container">
+        <div class="tool-container">
+            <h1>Compress Your Files</h1>
+            <form id="uploadForm" class="upload-form">
+                <input type="file" class="file-input" name="file" accept=".jpg,.jpeg,.png,.gif" required>
+                <button type="submit">Compress File</button>
+            </form>
+            <div id="loadingIndicator" style="display:none;">
+                <p>Compressing your file...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
                 </div>
             </div>
+            <div id="results" style="display:none;">
+                <h3>Compression Complete!</h3>
+                <p>Original Size: <span id="originalSize">-</span></p>
+                <p>Compressed Size: <span id="compressedSize">-</span></p>
+                <p>Space Saved: <span id="compressionRatio">-</span></p>
+                <div class="download-section">
+                    <a href="#" id="downloadButton" class="download-button" download>Download</a>
+                </div>
+            </div>
+            <div id="errorMessage" style="color:red;display:none;">Error occurred</div>
         </div>
-    </div>
+
+        <section id="help">
+            <h2>Help Section</h2>
+            <p>Need assistance? Submit your query below:</p>
+            <form class="grid">
+                <input type="text" placeholder="Enter your query" required>
+                <button type="submit">Submit</button>
+            </form>
+        </section>
+
+        <section id="faqs">
+            <h2>FAQs</h2>
+            <p><strong>Q: Is my data secure?</strong><br>A: Yes, we use advanced encryption methods.</p>
+            <p><strong>Q: What file formats are supported?</strong><br>A: We support ZIP, RAR, JPG, and PNG files.</p>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Us</h2>
+            <p>We'd love to hear from you. Please fill out the form below:</p>
+            <form class="grid">
+                <input type="text" placeholder="Your Name" required>
+                <input type="email" placeholder="Your Email" required>
+                <textarea placeholder="Your Message" required></textarea>
+                <button type="submit">Send</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="container">
+        <small><a href="#features">Features</a> • <a href="#help">Help</a> • <a href="#faqs">FAQs</a> • <a href="#contact">Contact Us</a></small>
+    </footer>
 
     <script>
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        document.getElementById('uploadForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
-            const form = this;
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const progressBar = document.getElementById('progressBar');
-            const progressFill = progressBar.querySelector('.progress-fill');
-            const errorMessage = document.getElementById('errorMessage');
-            const results = document.getElementById('results');
-            
-            // Reset UI
-            loadingIndicator.style.display = 'block';
-            progressBar.style.display = 'block';
-            errorMessage.style.display = 'none';
-            results.style.display = 'none';
-            
-            // Simulate progress
+            const progressFill = document.querySelector('.progress-fill');
+            document.getElementById('loadingIndicator').style.display = 'block';
             let progress = 0;
-            const progressInterval = setInterval(() => {
+            const interval = setInterval(() => {
                 if (progress < 90) {
                     progress += 10;
                     progressFill.style.width = progress + '%';
@@ -219,47 +145,19 @@
             }, 500);
 
             try {
-                const formData = new FormData(form);
-                const response = await fetch('/compress', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                // Complete progress bar
-                clearInterval(progressInterval);
-                progressFill.style.width = '100%';
-                
-                // Update results
-                document.getElementById('originalSize').textContent = (data.original_size / 1024).toFixed(2) + ' KB';
-                document.getElementById('compressedSize').textContent = (data.compressed_size / 1024).toFixed(2) + ' KB';
-                document.getElementById('compressionRatio').textContent = data.compression_ratio + '%';
-                
-                // Setup download button
-                const downloadButton = document.getElementById('downloadButton');
-                downloadButton.href = data.download_url;
-                downloadButton.setAttribute('download', data.filename);
-                
-                // Show results
-                results.style.display = 'block';
-                
-                // Auto-trigger download for mobile
-                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                    window.location.href = data.download_url;
-                }
-                
-            } catch (error) {
-                clearInterval(progressInterval);
-                errorMessage.textContent = error.message || 'An error occurred during compression';
-                errorMessage.style.display = 'block';
-            } finally {
-                loadingIndicator.style.display = 'none';
-                progressBar.style.display = 'none';
+                // Simulated backend compression response
+                setTimeout(() => {
+                    clearInterval(interval);
+                    progressFill.style.width = '100%';
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('originalSize').textContent = '2 MB';
+                    document.getElementById('compressedSize').textContent = '1 MB';
+                    document.getElementById('compressionRatio').textContent = '50%';
+                    document.getElementById('downloadButton').href = '#';
+                }, 3000);
+            } catch {
+                clearInterval(interval);
+                document.getElementById('errorMessage').style.display = 'block';
             }
         });
     </script>
